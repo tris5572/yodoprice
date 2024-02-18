@@ -12,6 +12,7 @@ const DATA_FILE_NAME: &str = "data.json";
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AppData {
+    /// 全登録アイテムの履歴
     pub histories: Vec<ProductHistory>,
 }
 
@@ -34,9 +35,17 @@ impl AppData {
 /// 1つの製品における価格等の履歴データ
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ProductHistory {
+    /// このアプリで独自に割り振ったID
+    pub id: String,
+    /// 製品名
     pub name: String,
+    /// 自分で設定した名称
+    pub custom_name: Option<String>,
+    /// 製品のURL
     pub url: String,
+    /// 価格の履歴
     pub history: Vec<OnePrice>,
+    /// 製造メーカ
     pub maker: String,
 }
 
@@ -54,6 +63,7 @@ pub struct OnePrice {
 
 impl OnePrice {
     /// サイトから取得したデータを元に、1回分の価格データを生成する。
+    /// 日時は現時刻を割り当てる。
     fn from_web_data(data: WebData) -> Self {
         Self {
             price: data.price,
