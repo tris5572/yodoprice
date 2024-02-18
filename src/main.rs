@@ -12,7 +12,11 @@ fn main() {
     // let data = access::get_data("https://www.yodobashi.com/product/100000001007496605/");
     // println!("{:?}", data);
 
-    // データ書き込みテスト
+    write_file_test();
+}
+
+// データ書き込みテスト
+fn write_file_test() {
     let data1 = ProductHistory {
         name: "テストデータ1".to_string(),
         url: "http://test-data-01/".to_string(),
@@ -37,7 +41,11 @@ fn main() {
     };
 
     let file_name = "test_data.json";
-    output(file_name, &vec![data1, data2]);
+    let result = output(file_name, &vec![data1, data2]);
+    match result {
+        Ok(_) => {}
+        Err(err) => println!("ファイル書き込みエラー: {}", err),
+    }
 }
 
 fn output(file_name: &str, data: &Vec<ProductHistory>) -> std::io::Result<()> {
