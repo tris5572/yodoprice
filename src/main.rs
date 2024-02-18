@@ -12,7 +12,28 @@ fn main() {
     // let data = access::get_data("https://www.yodobashi.com/product/100000001007496605/");
     // println!("{:?}", data);
 
-    write_file_test();
+    // write_file_test();
+    read_file_test();
+}
+
+// データ読み込みテスト
+fn read_file_test() {
+    let file_name = "test_data.json";
+
+    let data = read(file_name);
+    println!("{:?}", data);
+}
+
+fn read(file_name: &str) -> std::io::Result<Vec<ProductHistory>> {
+    // 実行ファイルがある場所をカレントディレクトリに設定
+    let exe_path = std::env::current_exe().unwrap();
+    let exe_dir = exe_path.parent().unwrap();
+    std::env::set_current_dir(exe_dir).unwrap();
+
+    let input = std::fs::read_to_string(file_name)?;
+    let data = serde_json::from_str(&input).unwrap();
+
+    Ok(data)
 }
 
 // データ書き込みテスト
