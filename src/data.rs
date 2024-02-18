@@ -1,15 +1,33 @@
+use std::io::Write;
+
 use chrono::serde::ts_seconds;
-use chrono::{DateTime, Local, Utc};
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 use crate::types::WebData;
 
+const DATA_FILE_NAME: &str = "data.json";
+
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-// #[derive(Debug, Serialize, Deserialize)]
-// pub struct AllHistory {
-//     pub histories: Vec<ProductHistory>,
-// }
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AppData {
+    pub histories: Vec<ProductHistory>,
+}
+
+impl AppData {
+    /// データをファイルから読み込む。
+    pub fn from_file() -> Self {
+        let data = read_data_file();
+        let histories = data.unwrap_or_default();
+        Self { histories }
+    }
+
+    /// データをファイルへ出力する。
+    pub fn write_file(&self) -> std::io::Result<()> {
+        write_data_file(&self.histories)
+    }
+}
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -44,4 +62,34 @@ impl OnePrice {
             datetime: Utc::now(),
         }
     }
+}
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// ファイル操作系
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+fn read_data_file() -> std::io::Result<Vec<ProductHistory>> {
+    // 実行ファイルがある場所をカレントディレクトリに設定
+    let exe_path = std::env::current_exe().unwrap();
+    let exe_dir = exe_path.parent().unwrap();
+    std::env::set_current_dir(exe_dir).unwrap();
+
+    let input = std::fs::read_to_string(DATA_FILE_NAME)?;
+    let data = serde_json::from_str(&input).unwrap();
+
+    Ok(data)
+}
+
+fn write_data_file(data: &Vec<ProductHistory>) -> std::io::Result<()> {
+    // データをシリアライズ
+    let serialized = serde_json::to_string(&data).unwrap();
+
+    // 実行ファイルがある場所をカレントディレクトリに設定
+    let exe_path = std::env::current_exe().unwrap();
+    let exe_dir = exe_path.parent().unwrap();
+    std::env::set_current_dir(exe_dir).unwrap();
+
+    let mut file = std::fs::File::create(DATA_FILE_NAME)?;
+    file.write_all(serialized.as_bytes())?;
+    Ok(())
 }
