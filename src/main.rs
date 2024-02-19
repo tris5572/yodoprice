@@ -57,7 +57,6 @@ pub fn print_help() {
 }
 
 pub fn command_add(input: &str) {
-    println!("command_add(): {}", input);
     let buf: Vec<_> = input.split_whitespace().collect();
     if buf.len() <= 1 {
         println!("URLを指定してください。");

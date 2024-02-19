@@ -37,19 +37,25 @@ impl AppData {
     /// URLから製品を追加する。
     /// URLにアクセスできないときや、すでに登録済みのときはエラーを返す。
     pub fn add_from_url(&mut self, url: &str) -> Result<(), Box<dyn std::error::Error>> {
-        println!("add_from_url()");
         let data = get_data(url)?;
-        // TODO: 重複チェックし、重複する場合はエラーを返す。
 
-        println!("add_from_url() - get data finished.");
+        // TODO: 重複チェックし、重複する場合はエラーを返す。
+        let url_list = self.url_list();
+        if url_list.iter().any(|v| v == url) {
+            return Ok(());
+        }
 
         // 新規追加する。
         let product = ProductHistory::from_web_data(data);
         self.histories.push(product);
 
-        println!("add_from_url() - add product finished.");
-
         Ok(())
+    }
+
+    // 登録されている製品のURLの一覧を返す。
+    pub fn url_list(&self) -> Vec<String> {
+        let array: Vec<_> = self.histories.iter().map(|v| v.url.clone()).collect();
+        array
     }
 }
 
