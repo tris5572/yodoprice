@@ -1,16 +1,21 @@
 use std::io::Write;
+use std::sync::Mutex;
 
 use chrono::serde::ts_seconds;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-use crate::types::WebData;
+use crate::access::get_data;
+use crate::types::{StockStatus, WebData};
 
 const DATA_FILE_NAME: &str = "data.json";
 
+/// アプリケーション全体のデータ。
+pub static APP_STATE: Mutex<AppData> = Mutex::new(AppData { histories: vec![] });
+
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 pub struct AppData {
     /// 全登録アイテムの履歴
     pub histories: Vec<ProductHistory>,
@@ -27,6 +32,24 @@ impl AppData {
     /// データをファイルへ出力する。
     pub fn write_file(&self) -> std::io::Result<()> {
         write_data_file(&self.histories)
+    }
+
+    /// URLから製品を追加する。
+    /// URLにアクセスできないときや、すでに登録済みのときはエラーを返す。
+    pub fn add_from_url(&mut self, url: &str) -> Result<(), Box<dyn std::error::Error>> {
+        println!("add_from_url()");
+        let data = get_data(url)?;
+        // TODO: 重複チェックし、重複する場合はエラーを返す。
+
+        println!("add_from_url() - get data finished.");
+
+        // 新規追加する。
+        let product = ProductHistory::from_web_data(data);
+        self.histories.push(product);
+
+        println!("add_from_url() - add product finished.");
+
+        Ok(())
     }
 }
 
@@ -49,6 +72,22 @@ pub struct ProductHistory {
     pub maker: String,
 }
 
+impl ProductHistory {
+    /// サイトから取得したデータを元に、新しい製品データを生成する。
+    fn from_web_data(data: WebData) -> Self {
+        let price = OnePrice::from_web_data(data.clone());
+        // TODO: IDを生成する
+        Self {
+            id: "".to_string(),
+            name: data.name,
+            custom_name: None,
+            url: data.url,
+            history: vec![price],
+            maker: data.maker,
+        }
+    }
+}
+
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 /// 1回分の価格データ
@@ -57,6 +96,7 @@ pub struct OnePrice {
     pub price: u64,
     pub point: u64,
     pub point_ratio: u64,
+    pub status: StockStatus,
     #[serde(with = "ts_seconds")]
     pub datetime: DateTime<Utc>,
 }
@@ -69,6 +109,7 @@ impl OnePrice {
             price: data.price,
             point: data.point,
             point_ratio: data.point_ratio,
+            status: StockStatus::default(),
             datetime: Utc::now(),
         }
     }
@@ -92,7 +133,7 @@ fn read_data_file() -> std::io::Result<Vec<ProductHistory>> {
 
 fn write_data_file(data: &Vec<ProductHistory>) -> std::io::Result<()> {
     // データをシリアライズ
-    let serialized = serde_json::to_string(&data).unwrap();
+    let serialized = serde_json::to_string_pretty(&data).unwrap();
 
     // 実行ファイルがある場所をカレントディレクトリに設定
     let exe_path = std::env::current_exe().unwrap();

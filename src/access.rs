@@ -1,5 +1,3 @@
-// use types::WebData;
-
 use regex::Regex;
 use reqwest::header;
 use scraper::{Html, Selector};

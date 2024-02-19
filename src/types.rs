@@ -1,4 +1,4 @@
-use std::default;
+use serde::{Deserialize, Serialize};
 
 // Webサイトから取得したデータ
 #[derive(Debug, Default, Clone)]
@@ -20,7 +20,7 @@ pub struct WebData {
 }
 
 // TODO: 各種ステータスに対する処理を実装する
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub enum StockStatus {
     /// 在庫あり
     Sufficient,
