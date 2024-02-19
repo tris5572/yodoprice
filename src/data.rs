@@ -6,7 +6,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 use crate::access::get_data;
-use crate::types::{StockStatus, WebData};
+use crate::types::{AlreadyExistsError, StockStatus, WebData};
 
 const DATA_FILE_NAME: &str = "data.json";
 
@@ -39,10 +39,12 @@ impl AppData {
     pub fn add_from_url(&mut self, url: &str) -> Result<(), Box<dyn std::error::Error>> {
         let data = get_data(url)?;
 
-        // TODO: 重複チェックし、重複する場合はエラーを返す。
+        // すでに登録されているURLと重複チェックし、重複する場合はエラーを返す。
         let url_list = self.url_list();
         if url_list.iter().any(|v| v == url) {
-            return Ok(());
+            return Err(Box::new(AlreadyExistsError {
+                message: "指定されたURLはすでに登録されています".to_string(),
+            }));
         }
 
         // 新規追加する。

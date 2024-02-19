@@ -23,7 +23,14 @@ pub fn get_data(url: &str) -> Result<WebData, Box<dyn std::error::Error>> {
         .default_headers(headers)
         .build()?;
 
-    let response = client.get(url).send()?.text()?;
+    let response = client.get(url).send()?;
+    if response.status() != 200 {
+        return Err(Box::new(std::io::Error::new(
+            std::io::ErrorKind::NotFound,
+            "ページを取得できませんでした",
+        )));
+    }
+    let response = response.text()?;
     // println!("{:?}", response);
     let mut data = parse_html(&response);
     data.url = url.to_owned();
@@ -35,6 +42,9 @@ fn parse_html(html: &str) -> WebData {
     let mut data = WebData::default();
 
     let document = Html::parse_document(html);
+
+    // TODO: 各種ステータスに対応したパースを最初に行う。
+    // TODO: ステータスに対応できないときは None を返すようにする。
 
     let selector = Selector::parse("p.js_ppPrdName").unwrap();
     let name = document.select(&selector).next().unwrap().inner_html();

@@ -44,3 +44,18 @@ impl StockStatus {
         StockStatus::BackOrder
     }
 }
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+#[derive(Debug)]
+pub struct AlreadyExistsError {
+    pub message: String,
+}
+
+impl std::error::Error for AlreadyExistsError {}
+
+impl std::fmt::Display for AlreadyExistsError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.message)
+    }
+}
