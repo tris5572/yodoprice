@@ -42,6 +42,10 @@ pub fn main_loop() {
             // 追加
             command_add(input);
             save_file();
+        } else if input.starts_with("update") || input == "u" {
+            // 更新
+            update_all();
+            save_file();
         } else if input == "add" || input == "a" {
             println!("追加するためには、URLも一緒に入力してください。");
         }
@@ -69,6 +73,12 @@ pub fn command_add(input: &str) {
         Ok(_) => println!("登録が正常に完了しました"),
         Err(e) => println!("登録時にエラーが発生しました({})", e),
     }
+}
+
+pub fn update_all() {
+    let mut app_state = APP_STATE.lock().unwrap();
+    let _result = (*app_state).update_all();
+    // TODO: 更新結果のメッセージを表示する。最安値が更新された、エラーが発生した、等。
 }
 
 // データをログファイルへ書き込む。

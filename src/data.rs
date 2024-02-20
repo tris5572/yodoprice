@@ -54,10 +54,40 @@ impl AppData {
         Ok(())
     }
 
+    // 登録されている全製品の価格を取得し、更新する。
+    // TODO: リターン後の表示のため、戻り値の型を Vec<Result<(), String>>に変える。
+    pub fn update_all(&mut self) -> Result<(), Vec<String>> {
+        let mut array = vec![];
+
+        for url in self.url_list() {
+            let result = get_data(&url);
+            match result {
+                Ok(data) => {
+                    let item = self.borrow_mut_product_by_url(&url);
+                    if let Some(v) = item {
+                        v.add_web_data(data)
+                    }
+                }
+                Err(_) => array.push(format!("データを取得できませんでした{}", url)),
+            }
+        }
+        Ok(())
+    }
+
     // 登録されている製品のURLの一覧を返す。
     pub fn url_list(&self) -> Vec<String> {
         let array: Vec<_> = self.histories.iter().map(|v| v.url.clone()).collect();
         array
+    }
+
+    // 指定されたURLを持つ価格履歴の借用を返す。
+    pub fn borrow_product_by_url(&self, url: &str) -> Option<&ProductHistory> {
+        self.histories.iter().find(|&v| v.url == url)
+    }
+
+    // 指定されたURLを持つ価格履歴の可変借用を返す。
+    pub fn borrow_mut_product_by_url(&mut self, url: &str) -> Option<&mut ProductHistory> {
+        self.histories.iter_mut().find(|v| v.url == url)
     }
 }
 
@@ -93,6 +123,11 @@ impl ProductHistory {
             history: vec![price],
             maker: data.maker,
         }
+    }
+
+    fn add_web_data(&mut self, data: WebData) {
+        let item = OnePrice::from_web_data(data);
+        self.history.push(item);
     }
 }
 
