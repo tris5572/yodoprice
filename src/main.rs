@@ -2,9 +2,12 @@ use std::io::Write;
 
 use data::{AppData, APP_STATE};
 
+use crate::util::omitted_string;
+
 mod access;
 mod data;
 mod types;
+mod util;
 
 fn main() {
     // access::get_data("https://www.rust-lang.org");
@@ -46,6 +49,9 @@ pub fn main_loop() {
             // 更新
             update_all();
             save_file();
+        } else if input.starts_with("list") || input == "l" {
+            // 一覧表示
+            print_list();
         } else if input == "add" || input == "a" {
             println!("追加するためには、URLも一緒に入力してください。");
         }
@@ -79,6 +85,20 @@ pub fn update_all() {
     let mut app_state = APP_STATE.lock().unwrap();
     let _result = (*app_state).update_all();
     // TODO: 更新結果のメッセージを表示する。最安値が更新された、エラーが発生した、等。
+}
+
+// 製品の一覧を表示する。
+pub fn print_list() {
+    let app_state = APP_STATE.lock().unwrap();
+    let products = &app_state.histories;
+    let mut i = 1;
+
+    for product in products {
+        print!("{}: {}  ", i, omitted_string(&product.name));
+        let (high, low, now) = product.high_low_now();
+        println!("現在{}円 - 最高{}円/最安{}円", now, high, low);
+        i += 1;
+    }
 }
 
 // データをログファイルへ書き込む。

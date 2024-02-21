@@ -129,6 +129,26 @@ impl ProductHistory {
         let item = OnePrice::from_web_data(data);
         self.history.push(item);
     }
+
+    /// 価格履歴で、最高値・最安値・現在価格を返す。
+    /// TODO: ポイント込みの価格をどうするか？
+    pub fn high_low_now(&self) -> (u64, u64, u64) {
+        let mut high = 0;
+        let mut low = 9999999999;
+
+        if self.history.is_empty() {
+            return (0, 0, 0);
+        }
+
+        for h in self.history.iter() {
+            let p = h.price;
+            high = std::cmp::max(high, p);
+            low = std::cmp::min(low, p);
+        }
+        let now = self.history.last().unwrap().price;
+
+        (high, low, now)
+    }
 }
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
