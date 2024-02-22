@@ -125,8 +125,16 @@ impl ProductHistory {
         }
     }
 
+    /// Webページから取得したデータを元に、価格履歴を追加する。
+    /// 前回と同じ価格だったときは追加しない。
     fn add_web_data(&mut self, data: WebData) {
         let item = OnePrice::from_web_data(data);
+        let last = self.history.last();
+        if let Some(x) = last {
+            if x.price == item.price {
+                return;
+            }
+        }
         self.history.push(item);
     }
 
