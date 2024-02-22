@@ -96,7 +96,7 @@ pub fn print_list() {
     for product in products {
         print!("{}: {}  ", i, omitted_string(&product.name));
         let (high, low, now) = product.high_low_now();
-        println!("現在{}円 - 最高{}円/最安{}円", now, high, low);
+        println!("￥{} - (￥{}円/￥{})", now, high, low);
         i += 1;
     }
 }

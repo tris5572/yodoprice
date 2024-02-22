@@ -81,9 +81,9 @@ impl AppData {
     }
 
     // 指定されたURLを持つ価格履歴の借用を返す。
-    pub fn borrow_product_by_url(&self, url: &str) -> Option<&ProductHistory> {
-        self.histories.iter().find(|&v| v.url == url)
-    }
+    // pub fn borrow_product_by_url(&self, url: &str) -> Option<&ProductHistory> {
+    //     self.histories.iter().find(|&v| v.url == url)
+    // }
 
     // 指定されたURLを持つ価格履歴の可変借用を返す。
     pub fn borrow_mut_product_by_url(&mut self, url: &str) -> Option<&mut ProductHistory> {
