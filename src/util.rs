@@ -7,6 +7,26 @@ pub fn omitted_string(input: &str) -> String {
     }
 }
 
+/// 渡された数値にカンマを入れた文字列を返す。
+pub fn commafy<T: Into<i128>>(value: T) -> String {
+    // 参考 https://stackoverflow.com/questions/26998485/is-it-possible-to-print-a-number-formatted-with-thousand-separator-in-rust
+    let val = value.into();
+    let mut num = val
+        .abs()
+        .to_string()
+        .as_bytes()
+        .rchunks(3)
+        .rev()
+        .map(std::str::from_utf8)
+        .collect::<Result<Vec<&str>, _>>()
+        .unwrap()
+        .join(",");
+    if val < 0 {
+        num = format!("-{num}");
+    }
+    num
+}
+
 #[cfg(test)]
 mod test {
     use crate::util::*;
@@ -26,5 +46,14 @@ mod test {
             "あいうえおかきくけこさしすせそたちつてとなにぬねの",
             omitted_string("あいうえおかきくけこさしすせそたちつてとなにぬねの")
         );
+    }
+
+    #[test]
+    fn name() {
+        assert_eq!(commafy(0_u32), "0");
+        assert_eq!(commafy(1234), "1,234");
+        assert_eq!(commafy(-1), "-1");
+        assert_eq!(commafy(-100), "-100");
+        assert_eq!(commafy(-1000), "-1,000");
     }
 }

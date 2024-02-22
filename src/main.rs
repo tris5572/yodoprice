@@ -2,7 +2,7 @@ use std::io::Write;
 
 use data::{AppData, APP_STATE};
 
-use crate::util::omitted_string;
+use crate::util::{commafy, omitted_string};
 
 mod access;
 mod data;
@@ -96,7 +96,12 @@ pub fn print_list() {
     for product in products {
         print!("{}: {}  ", i, omitted_string(&product.name));
         let (high, low, now) = product.high_low_now();
-        println!("￥{} - (￥{}円/￥{})", now, high, low);
+        println!(
+            "￥{} - (￥{}/￥{})",
+            commafy(now),
+            commafy(high),
+            commafy(low)
+        );
         i += 1;
     }
 }
