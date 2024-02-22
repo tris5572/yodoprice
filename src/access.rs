@@ -31,14 +31,22 @@ pub fn get_data(url: &str) -> Result<WebData, Box<dyn std::error::Error>> {
         )));
     }
     let response = response.text()?;
-    // println!("{:?}", response);
-    let mut data = parse_html(&response);
+    let mut data = match parse_html(&response) {
+        Ok(x) => x,
+        Err(e) => {
+            println!("{} の値を取得できませんでした", e);
+            return Err(Box::new(std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                "ページを取得できませんでした",
+            )));
+        }
+    };
     data.url = url.to_owned();
     Ok(data)
 }
 
 // HTMLをパースして価格等のデータを返す。
-fn parse_html(html: &str) -> WebData {
+fn parse_html(html: &str) -> Result<WebData, String> {
     let mut data = WebData::default();
 
     let document = Html::parse_document(html);
@@ -46,41 +54,61 @@ fn parse_html(html: &str) -> WebData {
     // TODO: 各種ステータスに対応したパースを最初に行う。
     // TODO: ステータスに対応できないときは None を返すようにする。
 
+    let key = "p.js_ppPrdName";
     let selector = Selector::parse("p.js_ppPrdName").unwrap();
-    let name = document.select(&selector).next().unwrap().inner_html();
-    // println!("{:?}", name);
+    let element = document.select(&selector).next();
+    let name = match element {
+        Some(x) => x.inner_html(),
+        None => return Err(format!("`{}` を持つ要素を特定できませんでした", key)),
+    };
     data.name = name;
 
-    // TODO: 値なしのときの処理
-    let selector = Selector::parse("span#js_scl_unitPrice").unwrap();
-    let price = document.select(&selector).next().unwrap().inner_html();
-    // println!("{:?}", price);
+    let key = "span#js_scl_unitPrice";
+    let selector = Selector::parse(key).unwrap();
+    let element = document.select(&selector).next();
+    let price = match element {
+        Some(x) => x.inner_html(),
+        None => return Err(format!("`{}` を持つ要素を特定できませんでした", key)),
+    };
     data.price = decode_price(&price);
 
-    // TODO: 値なしのときの処理
-    let selector = Selector::parse("span#js_scl_pointValue").unwrap();
-    let point = document.select(&selector).next().unwrap().inner_html();
-    // println!("{:?}", point);
+    let key = "span#js_scl_pointValue";
+    let selector = Selector::parse(key).unwrap();
+    let element = document.select(&selector).next();
+    let point = match element {
+        Some(x) => x.inner_html(),
+        None => return Err(format!("`{}` を持つ要素を特定できませんでした", key)),
+    };
     data.point = decode_point(&point);
 
-    // TODO: 値なしのときの処理
-    let selector = Selector::parse("span#js_scl_pointrate").unwrap();
-    let point_ratio = document.select(&selector).next().unwrap().inner_html();
-    // println!("{:?}", point_ratio);
+    let key = "span#js_scl_pointrate";
+    let selector = Selector::parse(key).unwrap();
+    let element = document.select(&selector).next();
+    let point_ratio = match element {
+        Some(x) => x.inner_html(),
+        None => return Err(format!("`{}` を持つ要素を特定できませんでした", key)),
+    };
     data.point_ratio = decode_point_ratio(&point_ratio);
 
-    // TODO: 各種ステータスに対する処理を実装する
-    let selector = Selector::parse("span#salesInfoTxt").unwrap();
-    let status = document.select(&selector).next().unwrap().inner_html();
-    // println!("{:?}", status);
+    let key = "span#salesInfoTxt";
+    let selector = Selector::parse(key).unwrap();
+    let element = document.select(&selector).next();
+    let status = match element {
+        Some(x) => x.inner_html(),
+        None => return Err(format!("`{}` を持つ要素を特定できませんでした", key)),
+    };
     data.status = StockStatus::from_string(&status);
 
-    let selector = Selector::parse("td#js_makerTD > a").unwrap();
-    let maker = document.select(&selector).next().unwrap().inner_html();
-    // println!("{:?}", maker);
+    let key = "td#js_makerTD > a";
+    let selector = Selector::parse(key).unwrap();
+    let element = document.select(&selector).next();
+    let maker = match element {
+        Some(x) => x.inner_html(),
+        None => return Err(format!("`{}` を持つ要素を特定できませんでした", key)),
+    };
     data.maker = maker;
 
-    data
+    Ok(data)
 }
 
 fn decode_price(string: &str) -> u64 {
@@ -614,7 +642,7 @@ mod tests {
 		$.onetag_viewItem(PARM_item, PARM_price, PARM_availability);
 		}(jQuery));
 		</script><script type="text/javascript"  src="/_Wrk-RyBMI71WL7csg/iJ3DDcGbDS/ORoxZ2Ms/SitYT/T88dgM"></script></body></html>"#####;
-        let data = parse_html(source);
+        let data = parse_html(source).unwrap();
         assert_eq!(
             "OGK KABUTO オージーケー カブト SN-13L [ブラック 57-59cm 安全規格 SGマーク]",
             data.name
