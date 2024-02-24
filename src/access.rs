@@ -45,7 +45,8 @@ pub fn get_data(url: &str) -> Result<WebData, Box<dyn std::error::Error>> {
     Ok(data)
 }
 
-// HTMLをパースして価格等のデータを返す。
+/// HTMLをパースして価格等のデータを返す。
+/// 取得できなかった場合（該当する要素がなかった場合等）は、Errにその旨のメッセージを入れて返す。
 fn parse_html(html: &str) -> Result<WebData, String> {
     let mut data = WebData::default();
 
@@ -111,6 +112,7 @@ fn parse_html(html: &str) -> Result<WebData, String> {
     Ok(data)
 }
 
+/// 価格表記をデコードする。
 fn decode_price(string: &str) -> u64 {
     if string.starts_with('￥') {
         let mut s = string.to_string();
@@ -121,6 +123,7 @@ fn decode_price(string: &str) -> u64 {
     0
 }
 
+/// ポイント表記をデコードする。
 fn decode_point(string: &str) -> u64 {
     // 数字以外を削除してから数値に変換する。
     let re = Regex::new(r"\D").unwrap();
@@ -131,6 +134,7 @@ fn decode_point(string: &str) -> u64 {
     s.parse::<u64>().unwrap()
 }
 
+/// ポイント還元率をデコードする。
 fn decode_point_ratio(string: &str) -> u64 {
     // 数字以外を削除してから数値に変換する。
     let re = Regex::new(r"\D").unwrap();

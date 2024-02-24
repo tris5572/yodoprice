@@ -1,4 +1,4 @@
-// 省略された文字列を返す。
+/// 省略された文字列を返す。
 pub fn omitted_string(input: &str) -> String {
     let end = input.char_indices().nth(25);
     match end {
